@@ -1,16 +1,17 @@
-# Go binaries
+# Binaries
+bot
 *.exe
-*.exe~
-*.dil
-*.so
-*.dylib
-*.test
 *.out
 
-# IDE
-.vscode/
-.idea/
-*.swp
+# OS
+.DS_Store
+Thumbs.db
 
-# Secrets
+# Go
+/bin/
+/pkg/
+/vendor/
+*.log
+
+# Env
 .env
