@@ -1,0 +1,16 @@
+# Go binaries
+*.exe
+*.exe~
+*.dil
+*.so
+*.dylib
+*.test
+*.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Secrets
+.env
