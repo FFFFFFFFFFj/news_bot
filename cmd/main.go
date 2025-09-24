@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 	"os"
 
@@ -9,10 +9,11 @@ import (
 	"github.com/joho/godotenv"
 
 	"telegram-news-bot/internal/db"
+	"telegram-news-bot/internal/bot"
 )
 
 func main() {
-	//start .env file 
+    //	start .env file 
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -29,48 +30,26 @@ func main() {
 	
 	//Telegram bot
 	botToken := os.Getenv("BOT_TOKEN")
-	bot, err := tgbotapi.NewBotAPI(botToken)
+	botAPI, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	//Enable debugging (we will see all messages in the console)
-	bot.Debug = false // debug OFF
-	log.Printf("Logged in as %s", bot.Self.UserName)
+	botAPI.Debug = false // debug OFF
+	log.Printf("Logged in as %s", botAPI.Self.UserName)
 
 	//Settings up receiving updates
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60 
+	
+	updates := botAPI.GetUpdatesChan(u)
 
+	// ID super-admin
 	superAdminID := os.Getenv("SUPER_ADMIN_ID")
 	
-	updates := bot.GetUpdatesChan(u)
-
 	//main loop
 	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-
-		log.Printf("New message: %s", update.Message.Text)
-
-		switch update.Message.Text {
-		case "/start":
-			role := "user"
-			if fmt.Sprintf("%d", update.Message.From.ID) == superAdminID {
-				role = "admin"
-			}
-			
-			err := db.AddUserWithRoleIfNotExists(pool, update.Message.From.ID, update.Message.From.UserName, role)
-			if err != nil {
-				log.Printf("DB error: %v", err)
-			} 
-			
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Hi, I`m your news bot")
-			bot.Send(msg)
-		case "/help":
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Your command ....\n\t/start\n\t/help")
-			bot.Send(msg)		
-		}
+		bot.Router(update, botAPI, pool, superAdminID)
 	}
 }

@@ -60,7 +60,7 @@ func createTables(pool *pgxpool.Pool) error {
 		`CREATE TABLE IF NOT EXISTS sources (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
-				url TEXT NOT NULL,
+				url TEXT NOT NULL UNIQUE,
 				category TEXT
 			);`,
 
@@ -112,4 +112,20 @@ func AddUserWithRoleIfNotExists(pool *pgxpool.Pool, telegramID int64, username, 
 	}
 
 	return nil
+}
+
+// adding a source to the database
+func AddSource(pool *pgxpool.Pool, name,url string) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx, `
+		INSERT INTO sources (name, url) 
+		VALUES ($1, $2) 
+		ON CONFLICT (url) DO NOTHING
+	`, name, url)
+		
+		if err != nil {
+			return fmt.Errorf("falied to insert source: %w", err)
+		}
+
+		return nil
 }
