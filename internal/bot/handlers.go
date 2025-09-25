@@ -29,7 +29,8 @@ func HandleStart(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 
 // command /help
 func HandleHelp(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Your commands: \n\t/start\n\thelp\n\t/addsource <name> <url>")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, 
+		"Your commands: \n\t/start\n\thelp\n\t/addsource\n\t/linckchannel\n\t/unlinkchannel\n\t/setpostime\n\t/setpostcount")
 	bot.Send(msg)
 }
 
@@ -46,6 +47,46 @@ func HandleAddSource(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool
 	state.Current = StateAwaitingName
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter the source name: ")
+	bot.Send(msg)
+}
+
+// comand /linkchannel
+func HandleLinkChanel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	userID := update.Message.From.ID
+	state := GetUsersState(userID)
+	state.Current = StateAwaiteingChannelDel
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID. "Enter @name channel")
+	bot.Send(msg)
+}
+
+// comand /unlinkchannel
+func HandleUnlinkChannel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	userID := update.Message.From.ID
+	state := GetUserState(userID)
+	state.Current = StateAwaitingChannelDel
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter @name channel")
+	bot.Send(msg)
+}
+
+// comand /setposttime
+func HandleSetPostTime(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	userID := update.Message.From.ID
+	state := GetUserState(userID)
+	state.Current = StateAwaitingPostTime
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter time posting (09:00)")
+	bot.Send(msg)
+}
+
+// comand /setpostcount
+func HandleSetPostCount(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	userID := update.Message.From.ID
+	state := GetUserState(userID)
+	steta.Current = StateAwaitingPostCount
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter the number of posts per day:")
 	bot.Send(msg)
 }
 
@@ -73,7 +114,57 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Source added: %s (%s)", name, url))
 			bot.Send(msg)
 		}
+		ResetUserState(userID)
 
+	case StateAwaitingChannelName:
+		channel := update.Message.Text
+		if err := db.AddUserChannel(pool, userID, channel); err != {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Channel %s successfully bound!", channel))
+			bot.Send(msg)
+		}
+		ResetUserState(userID)
+
+	case StateAwaitingUnlinkChannel:
+		channel := update.Message.Text
+		if err := db.RemoveUserChannel(pool, userID, channel); err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Channel %s is unlinked.", channel))
+			bot.Send(msg)
+		}
+		ResetUserState(userID)
+
+	case StateAwaitingPostTime:
+		time := update.Message.Text
+		if err := db.UpdateUserChannelTime(pool, userID, time); err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Posting time set: %s", time))
+			bot.Send(msg)
+		}
+		ResetUserState(userID)
+
+	case StateAwaitingPostCount:
+		count := update.Message.Text
+		var c int
+		_, err := fmt.Sscnf(count, "%d", &c)
+		if err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Please enter a valid number.")
+			bot.Send(msg)
+			return
+		}
+		if err := db.Update.UserChannelCount(pool, userID, c); err != nil {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Number of posts set: %d"))
+			bot.Send(msg)
+		}
 		ResetUserState(userID)
 	}
 }

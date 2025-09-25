@@ -6,11 +6,17 @@ const (
 	StateNone         State = "none"
 	StateAwaitingName State = "awaitingSourceName"
 	StateAwaitingURL  State = "awaitingSourceURL"
+
+	StateAwaitingChannelAdd State = "awaitingChannelAdd"
+	StateAwaitingChannelDel State = "awaitingChannelDel"
+	StateAwaitingPostTime   State = "awaitingPostTime"
+	StateAwaitingPostCount  State = "awaitingPostCount"
 )
 
 type UserState struct {
-	Current State
-	TempName string
+	Current   State
+	TempName  string
+	TempValue string
 }
 
 var userStates = make(map[int64]*UserState)

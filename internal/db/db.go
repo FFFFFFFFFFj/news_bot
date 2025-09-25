@@ -84,6 +84,13 @@ func createTables(pool *pgxpool.Pool) error {
 				message TEXT,
 				created_at TIMESTAMP DEFAULT now()
 			);`,
+		`CREATE TABLE IF NOT EXISTS user_channels (
+				id SERIAL PRIMARY KEY,
+				user_id INT REFERENCES users(id),
+				channel_username TEXT NOT NULL,
+				post_time TIME,
+				post_count INT DEFAULT 5
+			);`,
 	}
 
 	for _, q := range queries {
@@ -128,4 +135,43 @@ func AddSource(pool *pgxpool.Pool, name,url string) error {
 		}
 
 		return nil
+}
+
+func AddUserChannel(pool *pgxpool.Pool, userID int64, channel string) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx, `
+			INSERT INTO user_chanels (user_id, chanel_username)
+			VALUES ((SELECT id FROM users WHERE telegram_id = $1), $2)
+		`, userID, channel)
+	return err
+}
+
+func RemoveUserChanel(pool *pgxpool.Pool, userID int64, channel string) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx, `
+			DELETE FROM user_chanels
+			WHERE user_id = (SELECT id FROM users WHERE telegram_id = $1)
+			AND chanel_username = $2
+		`, userID, channel)
+	return err
+}
+
+func UpdateUserChannelTime(pool *pgxpool.Pool, userID int64, postTime string) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx, `
+			UPDATE user_chanels
+			SET post_time = $1
+			WHERE user_id = (SELECT id FROM users WHERE telegram_id = $2)
+		`, postTime, userID)
+	return err
+}
+
+func UpdateUserChannelCount(pool *pgxpool.Pool, userID int64, count int) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx, `
+			UPDATE user_chanels
+			SET post_count = $1
+			WHERE user_id = (SELECT id FROM users WHERE telegram_id = $2)
+		`, count, userID)
+	return err
 }

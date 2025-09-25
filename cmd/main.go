@@ -6,18 +6,15 @@ import (
 	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
-
+	
 	"telegram-news-bot/internal/db"
 	"telegram-news-bot/internal/bot"
+	"telegram-news-bot/internal/config"
 )
 
 func main() {
     //	start .env file 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	config.LoadEnv()
 
 	// Connecting to the base
 	log.Println("Trying to connect to DB...")
