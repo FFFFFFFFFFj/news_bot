@@ -7,10 +7,10 @@ const (
 	StateAwaitingName State = "awaitingSourceName"
 	StateAwaitingURL  State = "awaitingSourceURL"
 
-	StateAwaitingChannelAdd State = "awaitingChannelAdd"
-	StateAwaitingChannelDel State = "awaitingChannelDel"
-	StateAwaitingPostTime   State = "awaitingPostTime"
-	StateAwaitingPostCount  State = "awaitingPostCount"
+	StateAwaitingChannelName   State = "awaitingChannelName"
+	StateAwaitingUnlinkChannel State = "awaitingUnlinkChannel"	
+	StateAwaitingPostTime      State = "awaitingPostTime"
+	StateAwaitingPostCount     State = "awaitingPostCount"
 )
 
 type UserState struct {

@@ -146,7 +146,7 @@ func AddUserChannel(pool *pgxpool.Pool, userID int64, channel string) error {
 	return err
 }
 
-func RemoveUserChanel(pool *pgxpool.Pool, userID int64, channel string) error {
+func RemoveUserChannel(pool *pgxpool.Pool, userID int64, channel string) error {
 	ctx := context.Background()
 	_, err := pool.Exec(ctx, `
 			DELETE FROM user_chanels

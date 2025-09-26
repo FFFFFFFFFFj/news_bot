@@ -25,7 +25,7 @@ func Router(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, su
 		return
 	}
 
-	switch {
+	switch update.Message.Text {
 	case "/start":
 		HandleStart(update, bot, pool, superAdminID)
 	case "/help":
@@ -33,12 +33,12 @@ func Router(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, su
 	case "/addsource":
 		HandleAddSource(update, bot, pool, userRole)
 	case "/linkchannel":
-		HandleLinkChannel(update, bot, pool)
+		HandleLinkChannel(update, bot)
 	case "/unlinkchannel":
-		HandleUnlinkChannel(update, bot, pool)
+		HandleUnlinkChannel(update, bot)
 	case "/setposttime":
-		HandleSetPostTime(update, bot, pool)
+		HandleSetPostTime(update, bot)
 	case "/setpostcount":
-		HandleSetPostCount(update, bot, pool)
+		HandleSetPostCount(update, bot)
 	}
 }

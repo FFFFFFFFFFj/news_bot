@@ -51,12 +51,12 @@ func HandleAddSource(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool
 }
 
 // comand /linkchannel
-func HandleLinkChanel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func HandleLinkChannel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	userID := update.Message.From.ID
-	state := GetUsersState(userID)
-	state.Current = StateAwaiteingChannelDel
+	state := GetUserState(userID)
+	state.Current = StateAwaitingChannelName
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID. "Enter @name channel")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter @name channel")
 	bot.Send(msg)
 }
 
@@ -64,7 +64,7 @@ func HandleLinkChanel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 func HandleUnlinkChannel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	userID := update.Message.From.ID
 	state := GetUserState(userID)
-	state.Current = StateAwaitingChannelDel
+	state.Current = StateAwaitingUnlinkChannel
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter @name channel")
 	bot.Send(msg)
@@ -84,7 +84,7 @@ func HandleSetPostTime(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 func HandleSetPostCount(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	userID := update.Message.From.ID
 	state := GetUserState(userID)
-	steta.Current = StateAwaitingPostCount
+	state.Current = StateAwaitingPostCount
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter the number of posts per day:")
 	bot.Send(msg)
@@ -118,7 +118,7 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 
 	case StateAwaitingChannelName:
 		channel := update.Message.Text
-		if err := db.AddUserChannel(pool, userID, channel); err != {
+		if err := db.AddUserChannel(pool, userID, channel); err != nil {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
 			bot.Send(msg)
 		} else {
@@ -152,13 +152,13 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 	case StateAwaitingPostCount:
 		count := update.Message.Text
 		var c int
-		_, err := fmt.Sscnf(count, "%d", &c)
+		_, err := fmt.Sscanf(count, "%d", &c)
 		if err != nil {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Please enter a valid number.")
 			bot.Send(msg)
 			return
 		}
-		if err := db.Update.UserChannelCount(pool, userID, c); err != nil {
+		if err := db.UpdateUserChannelCount(pool, userID, c); err != nil {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
 			bot.Send(msg)
 		} else {
