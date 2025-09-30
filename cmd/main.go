@@ -34,7 +34,7 @@ func main() {
 
 	//Enable debugging (we will see all messages in the console)
 	botAPI.Debug = false // debug OFF
-	log.Printf("Logged in as %s", botAPI.Self.UserName)
+	//log.Printf("Logged in as %s", botAPI.Self.UserName)
 
 	//Settings up receiving updates
 	u := tgbotapi.NewUpdate(0)

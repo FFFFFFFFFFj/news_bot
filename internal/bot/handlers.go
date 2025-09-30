@@ -21,7 +21,7 @@ func HandleStart(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 		log.Printf("DB error: %v", err)
 	}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет, я бот парсер новостных статей в мире инвестиций." +
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Текст на время теста, после заменю, появляется при старте бота" +
 													   "\n\t/profile - открыть профиль" +
 													   "\n\t/help - список команд бота")
 	bot.Send(msg)
@@ -30,14 +30,14 @@ func HandleStart(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 // command /help
 func HandleHelp(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, 
-		"Your commands: \n\t/start\n\thelp\n\t/addsource\n\t/linckchannel\n\t/unlinkchannel\n\t/setpostime\n\t/setpostcount")
+		"Доступные команды: \n\t  -\t/profile\n\t  -\t/help\n\t  -\t/addsource\n\t  -\t/linckchannel\n\t  -\t/unlinkchannel\n\t  -\t/setpostime\n\t  -\t/setpostcount")
 	bot.Send(msg)
 }
 
 // command for admins onli
 func HandleAddSource(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, userRole string) {
 	if userRole != "admin" {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "This command is only available to administrators.")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Эта команда доступна только администратору")
 		bot.Send(msg)
 		return
 	}
@@ -46,7 +46,7 @@ func HandleAddSource(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool
 	state := GetUserState(userID)
 	state.Current = StateAwaitingName
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter the source name: ")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите название источника: ")
 	bot.Send(msg)
 }
 
@@ -56,7 +56,7 @@ func HandleLinkChannel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	state := GetUserState(userID)
 	state.Current = StateAwaitingChannelName
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter @name channel")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите название идентификатор канала @name")
 	bot.Send(msg)
 }
 
@@ -66,7 +66,7 @@ func HandleUnlinkChannel(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	state := GetUserState(userID)
 	state.Current = StateAwaitingUnlinkChannel
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter @name channel")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите название идентификатора канала @name")
 	bot.Send(msg)
 }
 
@@ -76,7 +76,7 @@ func HandleSetPostTime(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	state := GetUserState(userID)
 	state.Current = StateAwaitingPostTime
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter time posting (09:00)")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите время запланированного постинга в формате: (09:00)")
 	bot.Send(msg)
 }
 
@@ -86,7 +86,7 @@ func HandleSetPostCount(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	state := GetUserState(userID)
 	state.Current = StateAwaitingPostCount
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Enter the number of posts per day:")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите колличество постов в день:")
 	bot.Send(msg)
 }
 
@@ -99,7 +99,7 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 	case StateAwaitingName:
 		state.TempName = update.Message.Text
 		state.Current = StateAwaitingURL
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "New enter the source URL: ")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пока не знаю что это делает, но тут нужен url: ")
 		bot.Send(msg)
 		
 	case StateAwaitingURL:
@@ -108,10 +108,10 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 
 		err := db.AddSource(pool, name, url)
 		if err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error adding source:", err))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка добавления источника:", err))
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Source added: %s (%s)", name, url))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Источник добавлен: %s (%s)", name, url))
 			bot.Send(msg)
 		}
 		ResetUserState(userID)
@@ -119,10 +119,10 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 	case StateAwaitingChannelName:
 		channel := update.Message.Text
 		if err := db.AddUserChannel(pool, userID, channel); err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка: %v", err))
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Channel %s successfully bound!", channel))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Канал  %s успешно привязан!", channel))
 			bot.Send(msg)
 		}
 		ResetUserState(userID)
@@ -130,10 +130,10 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 	case StateAwaitingUnlinkChannel:
 		channel := update.Message.Text
 		if err := db.RemoveUserChannel(pool, userID, channel); err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка: %v", err))
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Channel %s is unlinked.", channel))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Канал  %s оключен.", channel))
 			bot.Send(msg)
 		}
 		ResetUserState(userID)
@@ -141,10 +141,10 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 	case StateAwaitingPostTime:
 		time := update.Message.Text
 		if err := db.UpdateUserChannelTime(pool, userID, time); err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка: %v", err))
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Posting time set: %s", time))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Время публикации установлено: %s", time))
 			bot.Send(msg)
 		}
 		ResetUserState(userID)
@@ -154,15 +154,15 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 		var c int
 		_, err := fmt.Sscanf(count, "%d", &c)
 		if err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Please enter a valid number.")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста введите коррктный номер.")
 			bot.Send(msg)
 			return
 		}
 		if err := db.UpdateUserChannelCount(pool, userID, c); err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка: %v", err))
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Number of posts set: %d"))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Количество отправленых постов: %d"))
 			bot.Send(msg)
 		}
 		ResetUserState(userID)
