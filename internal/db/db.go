@@ -112,7 +112,7 @@ func AddUserWithRoleIfNotExists(pool *pgxpool.Pool, telegramID int64, username, 
 			INSERT INTO users (telegram_id, username, role)
 			VALUES ($1, $2, $3)
 			ON CONFLICT (telegram_id) DO NOTHING
-		`, telegramID, username)
+		`, telegramID, username, role)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)

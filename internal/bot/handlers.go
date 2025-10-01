@@ -7,37 +7,38 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"telegram-news-bot/internal/db"
+	"telegram-news-bot/internal/texts"
 )
 
 //start bot
 func HandleStart(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, superAdminID string) {
 	role := "user"
+	
+	//If this is a super-admin, we set the role to superadmin
 	if fmt.Sprintf("%d", update.Message.From.ID) == superAdminID {
-		role = "admin"
+		role = "superadmin"
 	}
-
+	
+	//Add the user to the database if it doesn't exist
 	err := db.AddUserWithRoleIfNotExists(pool, update.Message.From.ID, update.Message.From.UserName, role)
 	if err != nil {
 		log.Printf("DB error: %v", err)
 	}
-
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Текст на время теста, после заменю, появляется при старте бота" +
-													   "\n\t/profile - открыть профиль" +
-													   "\n\t/help - список команд бота")
+	
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, texts.StartMessage)
 	bot.Send(msg)
 }
 
 // command /help
 func HandleHelp(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, 
-		"Доступные команды: \n\t  -\t/profile\n\t  -\t/help\n\t  -\t/addsource\n\t  -\t/linckchannel\n\t  -\t/unlinkchannel\n\t  -\t/setpostime\n\t  -\t/setpostcount")
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, texts.HelpMessage)
 	bot.Send(msg)
 }
 
 // command for admins onli
 func HandleAddSource(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, userRole string) {
 	if userRole != "admin" {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Эта команда доступна только администратору")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, texts.AdminOnly)
 		bot.Send(msg)
 		return
 	}
