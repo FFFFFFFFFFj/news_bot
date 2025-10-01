@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -168,4 +169,52 @@ func HandleState(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Poo
 		}
 		ResetUserState(userID)
 	}
+}
+
+//Profile
+func HandleProfile(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool) {
+	var role, username string
+	var telegramID int64
+
+	err := pool.QueryRow(
+		context.Background(),
+		"SELECT telegram_id, username, role FROM users WHERE telegram_id=$1",
+		update.Message.From.ID,
+	).Scan(&telegramID, &username, &role)
+
+	if err != nil {
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения профиля: %v", err))
+		bot.Send(msg)
+		return
+	}
+	//If username is not empty we put a placeholder
+	if username == "" {
+		username = "not specified"
+	}
+
+	msgText := fmt.Sprintf(texts.ProfileTemplate, telegramID, username, role)
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgText)
+	bot.Send(msg)
+}
+
+func HandleListSources(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool) {
+	rows, err := pool.Query(context.Background(), "SELECT name, url FROM sources ORDER BY id")
+	if err != nil {
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка получения источников: %v", err))
+		bot.Send(msg)
+		return
+	}
+	defer rows.Close()
+
+	msgText := "Список источников:\n"
+	for rows.Next() {
+		var name, url string
+		if err := rows.Scan(&name, &url); err != nil {
+			continue
+		}
+		msgText += fmt.Sprintf("- %s (%s)\n", name, url)
+	}
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgText)
+	bot.Send(msg)
 }

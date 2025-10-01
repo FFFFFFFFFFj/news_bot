@@ -18,3 +18,8 @@ const HelpMessage = "Доступные комманды: \n" +
 //Message for admin commands
 const AdminOnly = "Эта команда доступна только администратору"
 	
+//Profile
+const ProfileTemplate = "Ваш профиль:\n" +
+	"Telegram ID: %d\n" +
+	"Username: %s\n" +
+	"Роль: %s"

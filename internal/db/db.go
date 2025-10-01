@@ -111,11 +111,11 @@ func AddUserWithRoleIfNotExists(pool *pgxpool.Pool, telegramID int64, username, 
 	_, err := pool.Exec(ctx, `
 			INSERT INTO users (telegram_id, username, role)
 			VALUES ($1, $2, $3)
-			ON CONFLICT (telegram_id) DO NOTHING
+			ON CONFLICT (telegram_id) DO UPDATE SET username = EXCLUDED.username, role = EXCLUDED.role
 		`, telegramID, username, role)
 
 	if err != nil {
-		return fmt.Errorf("failed to insert user: %w", err)
+		return fmt.Errorf("failed to insert/update user: %w", err)
 	}
 
 	return nil
@@ -174,4 +174,14 @@ func UpdateUserChannelCount(pool *pgxpool.Pool, userID int64, count int) error {
 			WHERE user_id = (SELECT id FROM users WHERE telegram_id = $2)
 		`, count, userID)
 	return err
+}
+
+func GetUserRole(pool *pgxpool.Pool, telegramID int64) (string, error) {
+	ctx := context.Background()
+	var role string
+	err := pool.QueryRow(ctx, `SELECT role FROM users WHERE telegram_id=$1`, telegramID).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+	return role, nil
 }

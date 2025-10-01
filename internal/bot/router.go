@@ -5,6 +5,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"telegram-news-bot/internal/db"
 )
 
 func Router(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, superAdminID string) {
@@ -15,7 +16,12 @@ func Router(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, su
 	//Obtaining a user role (user/admin)
 	userRole := "user"
 	if fmt.Sprintf("%d", update.Message.From.ID) == superAdminID {
-		userRole = "admin"
+		userRole = "superadmin"
+	} else {
+		dbRole, err := db.GetUserRole(pool, update.Message.From.ID)
+		if err == nil && dbRole != "" {
+			userRole = dbRole
+		}
 	}
 
 	// status check
@@ -40,5 +46,9 @@ func Router(update tgbotapi.Update, bot *tgbotapi.BotAPI, pool *pgxpool.Pool, su
 		HandleSetPostTime(update, bot)
 	case "/setpostcount":
 		HandleSetPostCount(update, bot)
+	case "/profile":
+		HandleProfile(update, bot, pool)
+	case "/listsources":
+		HandleListSources(update, bot, pool)
 	}
 }
