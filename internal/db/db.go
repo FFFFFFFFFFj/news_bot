@@ -2,10 +2,13 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"telegram-news-bot/internal/models"
 )
 
 // ConnectDB - connection to the database
@@ -184,4 +187,42 @@ func GetUserRole(pool *pgxpool.Pool, telegramID int64) (string, error) {
 		return "", err
 	}
 	return role, nil
+}
+
+// func for parser.go single-source parser
+func AddNews(pool *pgxpool.Pool, sourceID int, title, link string, published time.Time, category string) error {
+	ctx := context.Background()
+	_, err := pool.Exec(ctx,`
+			INSERT INTO news (source_id, title, link, published, category)
+			VALUES ($1, $2, $3, $4, $5)
+			ON CONFLICT (link) DO NOTHING
+		`, sourceID, title, link, published, category)
+	return err
+}
+
+//internall/parser/parser.go
+func GetAllSources(pool *pgxpool.Pool) ([]models.Source, error) {
+	ctx := context.Background()
+	rows, err := pool.Query(ctx, `SELECT id, name, url, category FROM sources`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sources []models.Source
+	for rows.Next() {
+		var s models.Source
+		var category sql.NullString
+		if err := rows.Scan(&s.ID, &s.Name, &s.URL, &category); err != nil {
+			return nil, err
+		}
+
+		if category.Valid {
+			s.Category = category.String
+		} else {
+			s.Category = "uncategorized"
+		}
+		sources = append(sources, s)
+	}
+	return sources, nil
 }

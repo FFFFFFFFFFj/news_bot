@@ -4,12 +4,14 @@ import (
 	//"fmt"
 	"log"
 	"os"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	
 	"telegram-news-bot/internal/db"
 	"telegram-news-bot/internal/bot"
 	"telegram-news-bot/internal/config"
+	"telegram-news-bot/internal/parser"
 )
 
 func main() {
@@ -44,9 +46,21 @@ func main() {
 
 	// ID super-admin
 	superAdminID := os.Getenv("SUPER_ADMIN_ID")
-	
+
+	//Run the parser in the background
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for{
+			log.Println("Parsing all...")
+			parser.ParseAllSources(pool)
+			<-ticker.C
+		}
+	}()
+ 		
 	//main loop
 	for update := range updates {
 		bot.Router(update, botAPI, pool, superAdminID)
+
 	}
 }

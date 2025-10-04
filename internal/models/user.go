@@ -8,16 +8,11 @@ const (
 	RoleSuperAdmin Role = "superadmin"
 )
 
-type User struct {
-	ID       int64  `bson:"_id"`
-	Username string `bson:"username"`
-	Role     Role   `bson:"role"`
+//Helper functions for checking roles by string
+func IsAdmin(role string) bool {
+	return role == string(RoleAdmin) || role == string(RoleSuperAdmin)
 }
 
-func (u *User) IsAdmin() bool {
-	return u.Role == RoleAdmin || u.Role == RoleSuperAdmin
-}
-
-func (u *User) IsSuperAdmin() bool {
-	return u.Role == RoleSuperAdmin
+func IsSuperAdmin(role string) bool {
+	return role == string(RoleSuperAdmin)
 }
